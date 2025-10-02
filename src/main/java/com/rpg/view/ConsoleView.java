@@ -24,13 +24,14 @@ public class ConsoleView {
         System.out.println("\n  COMBAT:");
         System.out.println("    7. Combat simple");
         System.out.println("    8. Combat avancé (actions multiples)");
-        System.out.println("    9. Afficher historique des actions");
-        System.out.println("   10. Rejouer l'historique");
-        System.out.println("   11. Afficher journal de combat");
+        System.out.println("    9. ⚔ Combat d'équipes (avec stratégies)");
+        System.out.println("   10. Afficher historique des actions");
+        System.out.println("   11. Rejouer l'historique");
+        System.out.println("   12. Afficher journal de combat");
         System.out.println("\n  SYSTÈME:");
-        System.out.println("   12. Sauvegarder");
-        System.out.println("   13. Charger");
-        System.out.println("   14. Paramètres du jeu");
+        System.out.println("   13. Sauvegarder");
+        System.out.println("   14. Charger");
+        System.out.println("   15. Paramètres du jeu");
         System.out.println("    0. Quitter");
         System.out.print("\nChoix: ");
     }

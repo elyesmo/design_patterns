@@ -2,12 +2,15 @@ package com.rpg.controller;
 
 import com.rpg.builder.CharacterBuilder;
 import com.rpg.command.*;
+import com.rpg.combat.*;
 import com.rpg.composite.*;
 import com.rpg.dao.FileCharacterDAO;
 import com.rpg.decorator.AbilityDecorator;
 import com.rpg.model.Character;
 import com.rpg.observer.CombatLogger;
 import com.rpg.singleton.GameSettings;
+import com.rpg.strategy.*;
+import com.rpg.util.DisplayUtil;
 import com.rpg.validator.*;
 import com.rpg.view.ConsoleView;
 import java.util.ArrayList;
@@ -22,6 +25,7 @@ public class GameController {
     private CharacterValidator validator;
     private CommandHistory commandHistory;
     private CombatLogger combatLogger;
+    private TeamBattle teamBattle;
 
     public GameController() {
         this.view = new ConsoleView();
@@ -31,6 +35,7 @@ public class GameController {
         this.dao = new FileCharacterDAO();
         this.commandHistory = new CommandHistory();
         this.combatLogger = new CombatLogger();
+        this.teamBattle = new TeamBattle(combatLogger);
         setupValidator();
     }
 
@@ -66,14 +71,15 @@ public class GameController {
                     case "6": displayTeamsAndArmies(); break;
                     case "7": combat(); break;
                     case "8": advancedCombat(); break;
-                    case "9": commandHistory.displayHistory(); break;
-                    case "10": commandHistory.replay(); break;
-                    case "11": combatLogger.displayLogs(); break;
-                    case "12": saveCharacters(); break;
-                    case "13": loadCharacters(); break;
-                    case "14": configureSettings(); break;
+                    case "9": teamBattleMenu(); break;
+                    case "10": commandHistory.displayHistory(); break;
+                    case "11": commandHistory.replay(); break;
+                    case "12": combatLogger.displayLogs(); break;
+                    case "13": saveCharacters(); break;
+                    case "14": loadCharacters(); break;
+                    case "15": configureSettings(); break;
                     case "0": running = false; break;
-                    default: view.showMessage("❌ Choix invalide. Entrez un nombre entre 0 et 14");
+                    default: view.showMessage(DisplayUtil.error("Choix invalide. Entrez un nombre entre 0 et 15"));
                 }
             } catch (Exception e) {
                 view.showMessage("❌ Erreur: " + e.getMessage());
@@ -457,6 +463,62 @@ public class GameController {
                 settings.setMaxTeamsPerArmy(maxTeams);
                 view.showMessage("✅ Paramètre modifié");
                 break;
+        }
+    }
+
+    private void teamBattleMenu() {
+        if (teams.size() < 2 && armies.size() == 0) {
+            view.showMessage(DisplayUtil.error("Il faut au moins 2 équipes pour faire un combat!"));
+            return;
+        }
+
+        DisplayUtil.printSectionTitle("COMBAT D'ÉQUIPES AVEC STRATÉGIES");
+        
+        // Afficher toutes les équipes et armées disponibles
+        List<TeamComposite> allGroups = new ArrayList<>();
+        allGroups.addAll(teams);
+        allGroups.addAll(armies);
+        
+        view.showMessage("\nÉquipes/Armées disponibles:");
+        for (int i = 0; i < allGroups.size(); i++) {
+            view.showMessage(i + ". " + allGroups.get(i));
+        }
+        
+        int team1Index = view.askIntInput("\nChoisir l'équipe 1 (0-" + (allGroups.size()-1) + ")");
+        int team2Index = view.askIntInput("Choisir l'équipe 2 (0-" + (allGroups.size()-1) + ")");
+        
+        if (team1Index < 0 || team1Index >= allGroups.size() ||
+            team2Index < 0 || team2Index >= allGroups.size() ||
+            team1Index == team2Index) {
+            view.showMessage(DisplayUtil.error("Indices invalides"));
+            return;
+        }
+        
+        TeamComposite team1 = allGroups.get(team1Index);
+        TeamComposite team2 = allGroups.get(team2Index);
+        
+        // Choisir les stratégies
+        view.showMessage("\n📋 Stratégies disponibles:");
+        view.showMessage("1. ⚔ Agressive - Attaque constamment");
+        view.showMessage("2. 🛡 Défensive - Privilégie la défense et survie");
+        view.showMessage("3. ⚖ Équilibrée - S'adapte à la situation");
+        
+        int strat1Choice = view.askIntInput("\nStratégie pour " + team1.getName() + " (1-3)");
+        int strat2Choice = view.askIntInput("Stratégie pour " + team2.getName() + " (1-3)");
+        
+        CombatStrategy strategy1 = getStrategy(strat1Choice);
+        CombatStrategy strategy2 = getStrategy(strat2Choice);
+        
+        // Lancer le combat
+        teamBattle.startTeamBattle(team1, team2, strategy1, strategy2);
+    }
+    
+    private CombatStrategy getStrategy(int choice) {
+        switch (choice) {
+            case 1: return new AggressiveStrategy();
+            case 2: return new DefensiveStrategy();
+            case 3: return new BalancedStrategy();
+            default: return new BalancedStrategy();
         }
     }
 }
