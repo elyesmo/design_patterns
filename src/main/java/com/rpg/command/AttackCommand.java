@@ -19,4 +19,9 @@ public class AttackCommand implements Command {
                          " et inflige " + damage + " degats!");
         System.out.println(target.getName() + " a maintenant " + target.getHealth() + " PV");
     }
+
+    @Override
+    public String toString() {
+        return attacker.getName() + " attaque " + target.getName();
+    }
 }

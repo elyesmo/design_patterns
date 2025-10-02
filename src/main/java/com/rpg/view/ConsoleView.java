@@ -10,16 +10,29 @@ public class ConsoleView {
     }
 
     public void showMenu() {
-        System.out.println("\n=== MENU PRINCIPAL ===");
-        System.out.println("1. Creer un personnage");
-        System.out.println("2. Ajouter des capacites");
-        System.out.println("3. Afficher personnages");
-        System.out.println("4. Creer une equipe");
-        System.out.println("5. Combat");
-        System.out.println("6. Sauvegarder");
-        System.out.println("7. Charger");
-        System.out.println("0. Quitter");
-        System.out.print("Choix (0-7): ");
+        System.out.println("\n╔═══════════════════════════════════════╗");
+        System.out.println("║      MENU PRINCIPAL - RPG GENERATOR   ║");
+        System.out.println("╚═══════════════════════════════════════╝");
+        System.out.println("  PERSONNAGES:");
+        System.out.println("    1. Créer un personnage");
+        System.out.println("    2. Ajouter des capacités");
+        System.out.println("    3. Afficher personnages");
+        System.out.println("\n  ÉQUIPES & ARMÉES:");
+        System.out.println("    4. Créer une équipe");
+        System.out.println("    5. Créer une armée");
+        System.out.println("    6. Afficher équipes/armées");
+        System.out.println("\n  COMBAT:");
+        System.out.println("    7. Combat simple");
+        System.out.println("    8. Combat avancé (actions multiples)");
+        System.out.println("    9. Afficher historique des actions");
+        System.out.println("   10. Rejouer l'historique");
+        System.out.println("   11. Afficher journal de combat");
+        System.out.println("\n  SYSTÈME:");
+        System.out.println("   12. Sauvegarder");
+        System.out.println("   13. Charger");
+        System.out.println("   14. Paramètres du jeu");
+        System.out.println("    0. Quitter");
+        System.out.print("\nChoix: ");
     }
 
     public String getUserInput() {
