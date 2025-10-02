@@ -1,12 +1,12 @@
-package rpg.builder;
+package com.rpg.builder;
 
-import rpg.core.Character;
+import com.rpg.model.Character;
 
 public class CharacterBuilder {
     private String name;
-    private int strength;
-    private int agility;
-    private int intelligence;
+    private int strength = 10;
+    private int agility = 10;
+    private int intelligence = 10;
 
     public CharacterBuilder setName(String name) {
         this.name = name;
@@ -29,17 +29,6 @@ public class CharacterBuilder {
     }
 
     public Character build() {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalStateException("Character name cannot be null or empty");
-        }
         return new Character(name, strength, agility, intelligence);
-    }
-
-    public CharacterBuilder reset() {
-        this.name = null;
-        this.strength = 0;
-        this.agility = 0;
-        this.intelligence = 0;
-        return this;
     }
 }
