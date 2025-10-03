@@ -16,6 +16,7 @@ import com.rpg.view.ConsoleView;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("deprecation") // Using legacy AbilityDecorator for backward compatibility
 public class GameController {
     private ConsoleView view;
     private List<Character> characters;
@@ -90,15 +91,18 @@ public class GameController {
     }
 
     private void createCharacter() {
-        view.showMessage("\n=== CRÉATION D'UN PERSONNAGE ===");
+        DisplayUtil.printSectionTitle("CRÉATION D'UN PERSONNAGE");
+        System.out.println(DisplayUtil.createBorder("🎭 Nouveau Héros 🎭", 70));
+        
         String name = view.askInput("Nom du personnage");
         
         GameSettings settings = GameSettings.getInstance();
-        view.showMessage("Points totaux maximum: " + settings.getMaxStatPoints());
+        System.out.println(DisplayUtil.info("Points de stats maximum: " + settings.getMaxStatPoints()));
+        System.out.println();
         
-        int strength = view.askIntInput("Force (1-20)");
-        int agility = view.askIntInput("Agilité (1-20)");
-        int intelligence = view.askIntInput("Intelligence (1-20)");
+        int strength = view.askIntInput("⚔  Force (1-20)");
+        int agility = view.askIntInput("🏃 Agilité (1-20)");
+        int intelligence = view.askIntInput("🧠 Intelligence (1-20)");
 
         Character character = new CharacterBuilder()
             .setName(name)
@@ -107,64 +111,151 @@ public class GameController {
             .setIntelligence(intelligence)
             .build();
 
-        if (validator.validate(character)) {
+        ValidationResult validationResult = validator.validateWithErrors(character);
+        if (validationResult.isValid()) {
             characters.add(character);
-            view.showMessage("✅ Personnage créé: " + character);
+            System.out.println("\n" + DisplayUtil.closeBorder(70));
+            System.out.println(DisplayUtil.success("Personnage créé avec succès!"));
+            System.out.println("\n📋 Détails:");
+            System.out.println("  • Nom: " + DisplayUtil.colorize(character.getName(), DisplayUtil.BOLD));
+            System.out.println("  • Niveau: " + character.getLevel());
+            System.out.println("  • " + DisplayUtil.createHealthBar(character.getHealth(), character.getMaxHealth(), 20));
+            System.out.println(String.format("  • Stats: ⚔ %d | 🏃 %d | 🧠 %d", 
+                character.getStrength(), character.getAgility(), character.getIntelligence()));
+            System.out.println("  • Puissance: " + DisplayUtil.colorize(String.valueOf(character.getPowerLevel()), 
+                DisplayUtil.GREEN));
         } else {
-            view.showMessage("❌ Personnage invalide (vérifiez les stats et le nom)");
+            System.out.println("\n" + DisplayUtil.closeBorder(70));
+            view.showMessage(DisplayUtil.error("Personnage invalide!"));
+            for (String error : validationResult.getErrors()) {
+                view.showMessage(DisplayUtil.warning("  • " + error));
+            }
         }
     }
 
     private void addAbilities() {
         if (characters.isEmpty()) {
-            view.showMessage("❌ Aucun personnage disponible");
+            view.showMessage(DisplayUtil.error("Aucun personnage disponible"));
             return;
         }
 
-        view.showMessage("\n=== AJOUT DE CAPACITÉS ===");
+        DisplayUtil.printSectionTitle("AJOUT DE CAPACITÉS SPÉCIALES");
         showCharacters();
-        int index = view.askIntInput("Index du personnage (0-" + (characters.size()-1) + ")");
+        int index = view.askIntInput("\nChoisir personnage (0-" + (characters.size()-1) + ")");
 
         if (index >= 0 && index < characters.size()) {
             Character character = characters.get(index);
 
-            view.showMessage("\n📚 Capacités disponibles:");
-            view.showMessage("  1. Invisibilité (+5 Agilité)");
-            view.showMessage("  2. Télépathie (+5 Intelligence)");
-            view.showMessage("  3. Super Force (+8 Force)");
-            view.showMessage("  4. Régénération (+50 PV)");
-            view.showMessage("  5. Pouvoir du Feu (+3 Force, +3 Intelligence)");
+            System.out.println("\n" + DisplayUtil.createBorder("📚 Capacités Disponibles 📚", 70));
+            System.out.println(DisplayUtil.colorize("  1. 👻 Invisibilité", DisplayUtil.CYAN) + " - +5 Agilité");
+            System.out.println("     Permet d'esquiver plus facilement");
+            System.out.println(DisplayUtil.colorize("\n  2. 🧠 Télépathie", DisplayUtil.PURPLE) + " - +5 Intelligence");
+            System.out.println("     Lecture de pensées et attaques mentales");
+            System.out.println(DisplayUtil.colorize("\n  3. 💪 Super Force", DisplayUtil.YELLOW) + " - +8 Force");
+            System.out.println("     Coups dévastateurs");
+            System.out.println(DisplayUtil.colorize("\n  4. 💚 Régénération", DisplayUtil.GREEN) + " - +50 PV");
+            System.out.println("     Guérison rapide et résilience");
+            System.out.println(DisplayUtil.colorize("\n  5. 🔥 Pouvoir du Feu", DisplayUtil.RED) + " - +3 Force, +3 Intelligence");
+            System.out.println("     Maîtrise des flammes");
+            System.out.println("\n" + DisplayUtil.closeBorder(70));
+            
             int ability = view.askIntInput("Choix capacité (1-5)");
 
+            String abilityName = "";
             switch (ability) {
-                case 1: AbilityDecorator.addInvisibility(character); break;
-                case 2: AbilityDecorator.addTelepathy(character); break;
-                case 3: AbilityDecorator.addSuperStrength(character); break;
-                case 4: AbilityDecorator.addRegeneration(character); break;
-                case 5: AbilityDecorator.addFirePower(character); break;
-                default: view.showMessage("❌ Capacité invalide"); return;
+                case 1: 
+                    AbilityDecorator.addInvisibility(character);
+                    abilityName = "Invisibilité";
+                    break;
+                case 2: 
+                    AbilityDecorator.addTelepathy(character);
+                    abilityName = "Télépathie";
+                    break;
+                case 3: 
+                    AbilityDecorator.addSuperStrength(character);
+                    abilityName = "Super Force";
+                    break;
+                case 4: 
+                    AbilityDecorator.addRegeneration(character);
+                    abilityName = "Régénération";
+                    break;
+                case 5: 
+                    AbilityDecorator.addFirePower(character);
+                    abilityName = "Pouvoir du Feu";
+                    break;
+                default: 
+                    view.showMessage(DisplayUtil.error("Capacité invalide")); 
+                    return;
             }
 
-            if (validator.validate(character)) {
-                view.showMessage("✅ Capacité ajoutée: " + character);
+            ValidationResult abilityValidation = validator.validateWithErrors(character);
+            if (abilityValidation.isValid()) {
+                System.out.println(DisplayUtil.success("Capacité '" + abilityName + "' ajoutée à " + character.getName() + "!"));
+                System.out.println("\n📊 Stats mises à jour:");
+                System.out.println(String.format("  • ⚔ Force: %d | 🏃 Agilité: %d | 🧠 Intelligence: %d",
+                    character.getStrength(), character.getAgility(), character.getIntelligence()));
+                System.out.println("  • " + DisplayUtil.createHealthBar(character.getHealth(), character.getMaxHealth(), 20));
+                System.out.println("  • Puissance totale: " + DisplayUtil.colorize(String.valueOf(character.getPowerLevel()), 
+                    DisplayUtil.GREEN));
+                System.out.println("  • Capacités: " + String.join(", ", character.getAbilities()));
             } else {
                 character.getAbilities().remove(character.getAbilities().size() - 1);
-                view.showMessage("❌ Trop de capacités (max " + 
-                               GameSettings.getInstance().getMaxAbilities() + ")");
+                view.showMessage(DisplayUtil.error("Erreur de validation:"));
+                for (String error : abilityValidation.getErrors()) {
+                    view.showMessage(DisplayUtil.warning("  • " + error));
+                }
             }
         }
     }
 
     private void showCharacters() {
         if (characters.isEmpty()) {
-            view.showMessage("📋 Aucun personnage créé");
+            view.showMessage(DisplayUtil.info("Aucun personnage créé"));
             return;
         }
 
-        view.showMessage("\n═══ LISTE DES PERSONNAGES ═══");
+        DisplayUtil.printSectionTitle("LISTE DES PERSONNAGES");
+        System.out.println(DisplayUtil.createBorder("👥 Roster de Personnages 👥", 70));
+        
         for (int i = 0; i < characters.size(); i++) {
-            view.showMessage(i + ". " + characters.get(i));
+            Character c = characters.get(i);
+            
+            // Ligne de séparation entre personnages
+            if (i > 0) {
+                System.out.println("  " + "─".repeat(66));
+            }
+            
+            // Nom et niveau
+            System.out.println(String.format("  %s%d. %s [Niveau %d]%s", 
+                DisplayUtil.BOLD, i, c.getName(), c.getLevel(), DisplayUtil.RESET));
+            
+            // Barre de vie
+            System.out.println("  ❤  " + DisplayUtil.createHealthBar(c.getHealth(), c.getMaxHealth(), 20));
+            
+            // Stats sur une ligne
+            System.out.println(String.format("  📊 Stats: %s⚔ %d%s | %s🏃 %d%s | %s🧠 %d%s | Puissance: %s%d%s",
+                DisplayUtil.YELLOW, c.getStrength(), DisplayUtil.RESET,
+                DisplayUtil.CYAN, c.getAgility(), DisplayUtil.RESET,
+                DisplayUtil.PURPLE, c.getIntelligence(), DisplayUtil.RESET,
+                DisplayUtil.GREEN, c.getPowerLevel(), DisplayUtil.RESET));
+            
+            // Capacités
+            if (!c.getAbilities().isEmpty()) {
+                System.out.println("  📚 Capacités: " + DisplayUtil.colorize(
+                    String.join(", ", c.getAbilities()), DisplayUtil.BLUE));
+            } else {
+                System.out.println("  📚 Capacités: " + DisplayUtil.colorize("Aucune", DisplayUtil.WHITE));
+            }
+            
+            // Expérience
+            if (c.getLevel() > 1 || c.getExperience() > 0) {
+                System.out.println(String.format("  ⭐ XP: %d/100 (Niveau suivant: %d XP)", 
+                    c.getExperience(), 100 - c.getExperience()));
+            }
         }
+        
+        System.out.println("\n" + DisplayUtil.closeBorder(70));
+        System.out.println(DisplayUtil.info("Total: " + characters.size() + " personnage(s)"));
     }
 
     private void createTeam() {
@@ -291,40 +382,127 @@ public class GameController {
 
     private void combat() {
         if (characters.size() < 2) {
-            view.showMessage("❌ Il faut au moins 2 personnages");
+            view.showMessage(DisplayUtil.error("Il faut au moins 2 personnages"));
             return;
         }
 
-        view.showMessage("\n⚔ === COMBAT SIMPLE ===");
+        DisplayUtil.printSectionTitle("COMBAT SIMPLE");
         showCharacters();
-        int attacker = view.askIntInput("Index attaquant (0-" + (characters.size()-1) + ")");
-        int target = view.askIntInput("Index défenseur (0-" + (characters.size()-1) + ")");
+        int attackerIdx = view.askIntInput("Index attaquant (0-" + (characters.size()-1) + ")");
+        int targetIdx = view.askIntInput("Index défenseur (0-" + (characters.size()-1) + ")");
 
-        if (attacker >= 0 && attacker < characters.size() && 
-            target >= 0 && target < characters.size() && attacker != target) {
+        if (attackerIdx < 0 || attackerIdx >= characters.size() || 
+            targetIdx < 0 || targetIdx >= characters.size() || attackerIdx == targetIdx) {
+            view.showMessage(DisplayUtil.error("Indices invalides"));
+            return;
+        }
 
-            Command attack = new AttackCommand(characters.get(attacker), characters.get(target));
-            attack.execute();
-            commandHistory.addCommand(attack);
-            
-            combatLogger.logCombatEvent("Combat entre " + characters.get(attacker).getName() + 
-                                       " et " + characters.get(target).getName());
+        Character attacker = characters.get(attackerIdx);
+        Character defender = characters.get(targetIdx);
 
-            Character winner = characters.get(attacker).getPowerLevel() > characters.get(target).getPowerLevel() 
-                             ? characters.get(attacker) : characters.get(target);
-            view.showMessage("🏆 Le plus puissant est: " + winner.getName());
+        // Sauvegarder les PV initiaux
+        int attackerInitialHP = attacker.getHealth();
+        int defenderInitialHP = defender.getHealth();
+
+        // Affichage de l'introduction
+        System.out.println(DisplayUtil.createBorder("⚔ DUEL ⚔", 70));
+        System.out.println(DisplayUtil.colorize("  " + attacker.getName() + " [Niv." + attacker.getLevel() + "]", 
+                                                DisplayUtil.CYAN + DisplayUtil.BOLD));
+        System.out.println("    Puissance: " + attacker.getPowerLevel());
+        System.out.println("    " + DisplayUtil.createHealthBar(attacker.getHealth(), attacker.getMaxHealth(), 20));
+        
+        System.out.println(DisplayUtil.colorize("\n          ⚔ CONTRE ⚔\n", DisplayUtil.YELLOW));
+        
+        System.out.println(DisplayUtil.colorize("  " + defender.getName() + " [Niv." + defender.getLevel() + "]", 
+                                                DisplayUtil.PURPLE + DisplayUtil.BOLD));
+        System.out.println("    Puissance: " + defender.getPowerLevel());
+        System.out.println("    " + DisplayUtil.createHealthBar(defender.getHealth(), defender.getMaxHealth(), 20));
+        System.out.println("\n" + DisplayUtil.closeBorder(70));
+
+        combatLogger.logCombatEvent("Combat entre " + attacker.getName() + " et " + defender.getName());
+
+        // Phase 1: Attaquant frappe
+        DisplayUtil.printSeparator();
+        System.out.println(DisplayUtil.colorize("\n▶ " + attacker.getName() + " attaque!", DisplayUtil.CYAN + DisplayUtil.BOLD));
+        Command attackCmd = new AttackCommand(attacker, defender);
+        attackCmd.execute();
+        commandHistory.addCommand(attackCmd);
+
+        System.out.println("\n  État après l'attaque:");
+        System.out.println("    " + defender.getName() + ": " + 
+                         DisplayUtil.createHealthBar(defender.getHealth(), defender.getMaxHealth(), 20));
+
+        // Pause visuelle
+        try { Thread.sleep(1000); } catch (InterruptedException e) {}
+
+        // Phase 2: Contre-attaque si encore en vie
+        if (defender.getHealth() > 0) {
+            DisplayUtil.printSeparator();
+            System.out.println(DisplayUtil.colorize("\n▶ " + defender.getName() + " contre-attaque!", 
+                                                   DisplayUtil.PURPLE + DisplayUtil.BOLD));
+            Command counterAttackCmd = new AttackCommand(defender, attacker);
+            counterAttackCmd.execute();
+            commandHistory.addCommand(counterAttackCmd);
+
+            System.out.println("\n  État après la contre-attaque:");
+            System.out.println("    " + attacker.getName() + ": " + 
+                             DisplayUtil.createHealthBar(attacker.getHealth(), attacker.getMaxHealth(), 20));
+
+            try { Thread.sleep(1000); } catch (InterruptedException e) {}
+        }
+
+        // Résultats finaux
+        DisplayUtil.printSeparator();
+        System.out.println(DisplayUtil.createBorder("📊 RÉSULTATS DU COMBAT 📊", 70));
+        
+        // Tableau comparatif
+        System.out.println(String.format("  %-20s  %-25s  %-25s", "", attacker.getName(), defender.getName()));
+        System.out.println("  " + "─".repeat(68));
+        
+        System.out.println(String.format("  %-20s  %d → %d (%+d)", "Points de Vie", 
+            attackerInitialHP, attacker.getHealth(), attacker.getHealth() - attackerInitialHP));
+        System.out.println(String.format("  %-20s  %d → %d (%+d)", "", 
+            defenderInitialHP, defender.getHealth(), defender.getHealth() - defenderInitialHP));
+        
+        System.out.println("\n  " + "─".repeat(68));
+        
+        // Déterminer le vainqueur
+        Character winner = null;
+        if (attacker.getHealth() > defender.getHealth()) {
+            winner = attacker;
+            System.out.println(DisplayUtil.colorize("\n  🏆 VAINQUEUR: " + attacker.getName(), 
+                                                   DisplayUtil.GREEN + DisplayUtil.BOLD));
+            System.out.println("    Plus de PV restants (" + attacker.getHealth() + " vs " + defender.getHealth() + ")");
+            attacker.addExperience(30);
+            System.out.println(DisplayUtil.info("    +" + 30 + " XP (Total: " + attacker.getExperience() + "/100)"));
+        } else if (defender.getHealth() > attacker.getHealth()) {
+            winner = defender;
+            System.out.println(DisplayUtil.colorize("\n  🏆 VAINQUEUR: " + defender.getName(), 
+                                                   DisplayUtil.GREEN + DisplayUtil.BOLD));
+            System.out.println("    Plus de PV restants (" + defender.getHealth() + " vs " + attacker.getHealth() + ")");
+            defender.addExperience(30);
+            System.out.println(DisplayUtil.info("    +" + 30 + " XP (Total: " + defender.getExperience() + "/100)"));
         } else {
-            view.showMessage("❌ Indices invalides");
+            System.out.println(DisplayUtil.colorize("\n  ⚖ MATCH NUL", DisplayUtil.YELLOW + DisplayUtil.BOLD));
+            System.out.println("    Les deux combattants ont le même nombre de PV");
+            attacker.addExperience(15);
+            defender.addExperience(15);
+        }
+
+        System.out.println("\n" + DisplayUtil.closeBorder(70));
+        
+        if (winner != null) {
+            combatLogger.logCombatEvent(winner.getName() + " remporte le duel!");
         }
     }
 
     private void advancedCombat() {
         if (characters.size() < 2) {
-            view.showMessage("❌ Il faut au moins 2 personnages");
+            view.showMessage(DisplayUtil.error("Il faut au moins 2 personnages"));
             return;
         }
 
-        view.showMessage("\n⚔ === COMBAT AVANCÉ ===");
+        DisplayUtil.printSectionTitle("COMBAT AVANCÉ - TOUR PAR TOUR");
         showCharacters();
         int char1Index = view.askIntInput("Personnage 1 (0-" + (characters.size()-1) + ")");
         int char2Index = view.askIntInput("Personnage 2 (0-" + (characters.size()-1) + ")");
@@ -332,58 +510,178 @@ public class GameController {
         if (char1Index < 0 || char1Index >= characters.size() || 
             char2Index < 0 || char2Index >= characters.size() || 
             char1Index == char2Index) {
-            view.showMessage("❌ Indices invalides");
+            view.showMessage(DisplayUtil.error("Indices invalides"));
             return;
         }
 
         Character char1 = characters.get(char1Index);
         Character char2 = characters.get(char2Index);
 
-        combatLogger.logCombatEvent("Début du combat entre " + char1.getName() + 
+        // Sauvegarder stats initiales
+        int char1InitialHP = char1.getHealth();
+        int char2InitialHP = char2.getHealth();
+        int char1Actions = 0;
+        int char2Actions = 0;
+        long startTime = System.currentTimeMillis();
+
+        // Affichage introduction
+        System.out.println(DisplayUtil.createBorder("⚔ COMBAT AVANCÉ ⚔", 70));
+        System.out.println(DisplayUtil.colorize("  " + char1.getName() + " [Niv." + char1.getLevel() + "]", 
+                                                DisplayUtil.CYAN + DisplayUtil.BOLD));
+        System.out.println("    ⚔ Force: " + char1.getStrength() + 
+                         " | 🏃 Agilité: " + char1.getAgility() + 
+                         " | 🧠 Intelligence: " + char1.getIntelligence());
+        System.out.println("    " + DisplayUtil.createHealthBar(char1.getHealth(), char1.getMaxHealth(), 20));
+        if (!char1.getAbilities().isEmpty()) {
+            System.out.println("    📚 Capacités: " + String.join(", ", char1.getAbilities()));
+        }
+        
+        System.out.println(DisplayUtil.colorize("\n          ⚔ CONTRE ⚔\n", DisplayUtil.YELLOW));
+        
+        System.out.println(DisplayUtil.colorize("  " + char2.getName() + " [Niv." + char2.getLevel() + "]", 
+                                                DisplayUtil.PURPLE + DisplayUtil.BOLD));
+        System.out.println("    ⚔ Force: " + char2.getStrength() + 
+                         " | 🏃 Agilité: " + char2.getAgility() + 
+                         " | 🧠 Intelligence: " + char2.getIntelligence());
+        System.out.println("    " + DisplayUtil.createHealthBar(char2.getHealth(), char2.getMaxHealth(), 20));
+        if (!char2.getAbilities().isEmpty()) {
+            System.out.println("    📚 Capacités: " + String.join(", ", char2.getAbilities()));
+        }
+        System.out.println("\n" + DisplayUtil.closeBorder(70));
+
+        combatLogger.logCombatEvent("Début du combat avancé entre " + char1.getName() + 
                                    " et " + char2.getName());
 
         boolean fighting = true;
         int round = 1;
 
         while (fighting && char1.getHealth() > 0 && char2.getHealth() > 0) {
-            view.showMessage("\n--- ROUND " + round + " ---");
-            view.showMessage(char1.getName() + ": " + char1.getHealth() + " PV");
-            view.showMessage(char2.getName() + ": " + char2.getHealth() + " PV");
+            DisplayUtil.printSeparator();
+            System.out.println(DisplayUtil.colorize("\n═══ ROUND " + round + " ═══", 
+                                                   DisplayUtil.BOLD + DisplayUtil.YELLOW));
+            DisplayUtil.printSeparator();
+            
+            // Affichage de l'état actuel
+            System.out.println("\n📊 État des combattants:");
+            System.out.println("  • " + char1.getName() + ": " + 
+                             DisplayUtil.createHealthBar(char1.getHealth(), char1.getMaxHealth(), 20));
+            System.out.println("  • " + char2.getName() + ": " + 
+                             DisplayUtil.createHealthBar(char2.getHealth(), char2.getMaxHealth(), 20));
 
             // Tour du personnage 1
+            System.out.println(DisplayUtil.colorize("\n▶ Tour de " + char1.getName(), 
+                                                   DisplayUtil.CYAN + DisplayUtil.BOLD));
             Command cmd1 = chooseAction(char1, char2);
             if (cmd1 != null) {
                 cmd1.execute();
                 commandHistory.addCommand(cmd1);
+                char1Actions++;
             }
 
+            // Pause visuelle
+            try { Thread.sleep(800); } catch (InterruptedException e) {}
+
             if (char2.getHealth() <= 0) {
-                view.showMessage("\n🏆 " + char1.getName() + " a gagné!");
-                combatLogger.logCombatEvent(char1.getName() + " a vaincu " + char2.getName());
+                displayCombatVictory(char1, char2, round, char1Actions, char2Actions, 
+                                    char1InitialHP, char2InitialHP, startTime);
                 break;
             }
 
             // Tour du personnage 2
+            System.out.println(DisplayUtil.colorize("\n▶ Tour de " + char2.getName(), 
+                                                   DisplayUtil.PURPLE + DisplayUtil.BOLD));
             Command cmd2 = chooseAction(char2, char1);
             if (cmd2 != null) {
                 cmd2.execute();
                 commandHistory.addCommand(cmd2);
+                char2Actions++;
             }
 
+            try { Thread.sleep(800); } catch (InterruptedException e) {}
+
             if (char1.getHealth() <= 0) {
-                view.showMessage("\n🏆 " + char2.getName() + " a gagné!");
-                combatLogger.logCombatEvent(char2.getName() + " a vaincu " + char1.getName());
+                displayCombatVictory(char2, char1, round, char2Actions, char1Actions, 
+                                    char2InitialHP, char1InitialHP, startTime);
                 break;
             }
 
-            view.showMessage("\nContinuer? (o/n)");
+            // Demander si on continue
+            System.out.print(DisplayUtil.info("\nContinuer le combat? (o/n): "));
             String choice = view.getUserInput();
             if (choice.equalsIgnoreCase("n")) {
                 fighting = false;
+                displayCombatDraw(char1, char2, round, char1Actions, char2Actions, startTime);
             }
 
             round++;
         }
+    }
+
+    private void displayCombatVictory(Character winner, Character loser, int rounds, 
+                                     int winnerActions, int loserActions,
+                                     int winnerInitialHP, int loserInitialHP, long startTime) {
+        long duration = (System.currentTimeMillis() - startTime) / 1000;
+        
+        System.out.println("\n" + DisplayUtil.createBorder("🏆 VICTOIRE 🏆", 70));
+        System.out.println(DisplayUtil.colorize("  " + winner.getName() + " remporte le combat!", 
+                                                DisplayUtil.GREEN + DisplayUtil.BOLD));
+        
+        System.out.println("\n  📊 Statistiques du combat:");
+        System.out.println("    • Durée: " + duration + " secondes");
+        System.out.println("    • Rounds: " + rounds);
+        System.out.println("    • Actions totales: " + (winnerActions + loserActions));
+        
+        System.out.println("\n  👤 Vainqueur - " + winner.getName() + ":");
+        System.out.println("    " + DisplayUtil.createHealthBar(winner.getHealth(), winner.getMaxHealth(), 20));
+        System.out.println("    • PV: " + winnerInitialHP + " → " + winner.getHealth() + 
+                         " (" + (winner.getHealth() - winnerInitialHP) + ")");
+        System.out.println("    • Actions: " + winnerActions);
+        
+        System.out.println("\n  💀 Vaincu - " + loser.getName() + ":");
+        System.out.println("    " + DisplayUtil.createHealthBar(loser.getHealth(), loser.getMaxHealth(), 20));
+        System.out.println("    • PV: " + loserInitialHP + " → " + loser.getHealth() + 
+                         " (" + (loser.getHealth() - loserInitialHP) + ")");
+        System.out.println("    • Actions: " + loserActions);
+        
+        // Expérience
+        int expGain = 50;
+        winner.addExperience(expGain);
+        System.out.println("\n  " + DisplayUtil.success(winner.getName() + " gagne " + expGain + 
+                         " XP (Total: " + winner.getExperience() + "/100)"));
+        
+        System.out.println("\n" + DisplayUtil.closeBorder(70));
+        
+        combatLogger.logCombatEvent(winner.getName() + " a vaincu " + loser.getName() + 
+                                   " après " + rounds + " rounds");
+    }
+
+    private void displayCombatDraw(Character char1, Character char2, int rounds, 
+                                  int actions1, int actions2, long startTime) {
+        long duration = (System.currentTimeMillis() - startTime) / 1000;
+        
+        System.out.println("\n" + DisplayUtil.createBorder("⚖ COMBAT INTERROMPU ⚖", 70));
+        System.out.println(DisplayUtil.colorize("  Le combat s'arrête avant qu'un vainqueur ne soit désigné", 
+                                                DisplayUtil.YELLOW + DisplayUtil.BOLD));
+        
+        System.out.println("\n  📊 Statistiques:");
+        System.out.println("    • Durée: " + duration + " secondes");
+        System.out.println("    • Rounds: " + rounds);
+        System.out.println("    • Actions totales: " + (actions1 + actions2));
+        
+        System.out.println("\n  État final:");
+        System.out.println("    • " + char1.getName() + ": " + 
+                         DisplayUtil.createHealthBar(char1.getHealth(), char1.getMaxHealth(), 20));
+        System.out.println("    • " + char2.getName() + ": " + 
+                         DisplayUtil.createHealthBar(char2.getHealth(), char2.getMaxHealth(), 20));
+        
+        // Expérience réduite
+        char1.addExperience(20);
+        char2.addExperience(20);
+        System.out.println("\n  " + DisplayUtil.info("Les deux combattants gagnent 20 XP"));
+        
+        System.out.println("\n" + DisplayUtil.closeBorder(70));
+        
+        combatLogger.logCombatEvent("Combat interrompu après " + rounds + " rounds");
     }
 
     private Command chooseAction(Character actor, Character target) {

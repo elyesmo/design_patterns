@@ -3,6 +3,7 @@ package com.rpg.composite;
 import com.rpg.observer.TeamObserver;
 import com.rpg.singleton.GameSettings;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -65,16 +66,36 @@ public class TeamComposite implements TeamComponent {
 
     @Override
     public List<TeamComponent> getChildren() {
-        return new ArrayList<>(members);
+        return Collections.unmodifiableList(members);
     }
 
     @Override
     public void add(TeamComponent component) {
+        if (component == null) {
+            throw new IllegalArgumentException("Cannot add null component");
+        }
+        
+        // Check for duplicates
+        if (members.contains(component)) {
+            throw new IllegalStateException("Component " + component.getName() + " is already in " + name);
+        }
+        
+        // Check for duplicate names
+        for (TeamComponent existing : members) {
+            if (existing.getName().equalsIgnoreCase(component.getName())) {
+                throw new IllegalStateException("A component named '" + component.getName() + "' already exists in " + name);
+            }
+        }
+        
         GameSettings settings = GameSettings.getInstance();
         
         // Validation selon le type
         if (type.equals("TEAM") && members.size() >= settings.getMaxCharactersPerTeam()) {
             throw new IllegalStateException("Équipe pleine (max " + settings.getMaxCharactersPerTeam() + " membres)");
+        }
+        
+        if (type.equals("ARMY") && members.size() >= settings.getMaxTeamsPerArmy()) {
+            throw new IllegalStateException("Armée pleine (max " + settings.getMaxTeamsPerArmy() + " équipes)");
         }
         
         members.add(component);

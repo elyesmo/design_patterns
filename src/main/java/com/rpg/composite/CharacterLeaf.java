@@ -1,7 +1,7 @@
 package com.rpg.composite;
 
 import com.rpg.model.Character;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -35,7 +35,7 @@ public class CharacterLeaf implements TeamComponent {
 
     @Override
     public List<TeamComponent> getChildren() {
-        return new ArrayList<>(); // Une feuille n'a pas d'enfants
+        return Collections.emptyList(); // Une feuille n'a pas d'enfants - immutable
     }
 
     @Override

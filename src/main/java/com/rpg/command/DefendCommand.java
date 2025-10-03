@@ -21,6 +21,12 @@ public class DefendCommand implements Command {
     }
 
     @Override
+    public ActionDTO toDTO() {
+        return new ActionDTO("DEFEND")
+            .addArg("defender", defender.getName());
+    }
+
+    @Override
     public String toString() {
         return defender.getName() + " défend";
     }
